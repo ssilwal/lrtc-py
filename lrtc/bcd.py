@@ -36,11 +36,10 @@ def shrinkage(X,tau):
 
 def compute_M(Mopt,gamma,alpha,beta,X,Y):
   tau = gamma/(alpha + beta)
-  Z = alpha * X + beta * Y/ (alpha + beta)
+  Z = (alpha * X + beta * Y)/ (alpha + beta)
   # reshape Z from H,W,C -> H,W*C
   Z = np.reshape(Z,(Z.shape[0],Z.shape[1]*Z.shape[2]))
   Mopt,di = shrinkage(Z, tau)
-  print('di:' + str(di))
   Mopt = np.reshape(Mopt,X.shape)
   return Mopt
 
@@ -58,10 +57,6 @@ def lrtc(T,gamma,max_itr=10):
   #alpha[2] = 0.001
 
   beta = np.ones((np.shape(Y)[-1]))
-  #beta[0] = 0.1
-  #beta[1] = 0.01
-  #beta[2] = 0.00001
-  
   err = []
   convergence = False
   itr = 0
