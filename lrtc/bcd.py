@@ -32,24 +32,26 @@ def shrinkage(X,tau):
   #D =  np.dot(U,np.dot(Sigma_tau,V[:n,:n]))
   #D = U[:,:n] * Sigma_tau * V[:n,:n]
   D = np.dot(U*Sigma_tau, V[:Sigma_tau.shape[0],:])
-  return D
+  return D,n
 
 def compute_M(Mopt,gamma,alpha,beta,X,Y):
   tau = gamma/(alpha + beta)
   Z = alpha * X + beta * Y/ (alpha + beta)
   # reshape Z from H,W,C -> H,W*C
   Z = np.reshape(Z,(Z.shape[0],Z.shape[1]*Z.shape[2]))
-  Mopt = shrinkage(Z, tau)
+  Mopt,di = shrinkage(Z, tau)
+  print('di:' + str(di))
   Mopt = np.reshape(Mopt,X.shape)
   return Mopt
 
 #assume T is of shape HxWxC (channel last)
 def lrtc(T,gamma,max_itr=10):
-  Y= T
-  X = Y
+  Y= np.copy(T)
+  mask = (T > 250) *1
+  X = np.copy(Y)
   M = []
   for i in range(T.shape[-1]):
-    M.append(np.array(Y))
+    M.append(np.copy(Y))
 
   alpha = np.ones((np.shape(X)[-1])) 
   #alpha[1] = 0.01
@@ -59,9 +61,10 @@ def lrtc(T,gamma,max_itr=10):
   #beta[0] = 0.1
   #beta[1] = 0.01
   #beta[2] = 0.00001
+  
+  err = []
   convergence = False
   itr = 0
-
   #measures in seconds https://realpython.com/python-timer/
   start_time = time.perf_counter()
   while not convergence:
@@ -72,11 +75,14 @@ def lrtc(T,gamma,max_itr=10):
       Xsum += alpha[i] *M[i]
       Ysum += beta[i] *M[i]
     X = compute_x(Xsum,alpha)
-    Y = compute_y(Ysum,beta)
-    print("T - Y_bar= " + str((T-Y).sum()))
+    Ysum = compute_y(Ysum,beta)
+    #pdb.set_trace()
+    print("Y - Y_bar= " + str((Y-Ysum).sum()))
+    err.append([(Y-Ysum).sum()])
+    Y[mask ==1 ] = Ysum[mask==1]
     itr += 1
     if itr == max_itr:
       convergence = True
   end_time = time.perf_counter()
   print("Time taken for LRTC: " + str(end_time-start_time) + "s")
-  return Y 
+  return Y,err
