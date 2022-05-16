@@ -6,9 +6,6 @@ import pdb
 import time
 
 def compute_x(Xsum, alphas):
-  # a - alpha weights (there should be n values)
-  # M - array of Mi values (there should be n)
-  
   #X = Sigma (a_i fold_i(M_i)) / Sigma (a_i) 
   X = Xsum/ (alphas.sum() + 1e-4)
   return X
@@ -44,7 +41,7 @@ def compute_M(Mopt,gamma,alpha,beta,X,Y):
   return Mopt
 
 #assume T is of shape HxWxC (channel last)
-def lrtc(T,gamma,max_itr=10):
+def lrtc(T,alpha,beta,gamma,max_itr=10):
   Y= np.copy(T)
   mask = (T > 250) *1
   X = np.copy(Y)
@@ -52,11 +49,6 @@ def lrtc(T,gamma,max_itr=10):
   for i in range(T.shape[-1]):
     M.append(np.copy(Y))
 
-  alpha = np.ones((np.shape(X)[-1])) 
-  #alpha[1] = 0.01
-  #alpha[2] = 0.001
-
-  beta = np.ones((np.shape(Y)[-1]))
   err = []
   convergence = False
   itr = 0
@@ -74,10 +66,11 @@ def lrtc(T,gamma,max_itr=10):
     #pdb.set_trace()
     print("Y - Y_bar= " + str((Y-Ysum).sum()))
     err.append([(Y-Ysum).sum()])
-    Y[mask ==1 ] = Ysum[mask==1]
+    Y[mask==1] = Ysum[mask==1]
     itr += 1
     if itr == max_itr:
       convergence = True
+    #TODO-- would be more elegant if we had some threshold value
   end_time = time.perf_counter()
   print("Time taken for LRTC: " + str(end_time-start_time) + "s")
   return Y,err

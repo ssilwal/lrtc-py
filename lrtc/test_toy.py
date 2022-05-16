@@ -5,8 +5,11 @@ import csv
 
 img = Image.open('testImg.png')
 X = np.asarray(img)
+a = np.array([1,1,1])
+b = np.array([1,1,1])
 gamma = [100,100,0]
-result,errors = bcd.lrtc(X,gamma,max_itr=20)
+
+result,errors = bcd.lrtc(X,a,b,gamma,max_itr=200)
 
 result_name = 'test_result.jpg'
 import pdb
